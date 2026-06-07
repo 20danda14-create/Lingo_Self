@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Türkçe Lingo Oyunu</title>
+    <style>
+        :root {
+            --correct-color: #2ecc71;
+            --present-color: #f1c40f;
+            --absent-color: #7f8c8d;
+            --bg-color: #1a1a1a;
+            --card-bg: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            color: #e74c3c;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+
+        .setup-container {
+            margin-bottom: 25px;
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        select, button {
+            padding: 10px 15px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        select {
+            background-color: #ffffff;
+            color: #333;
+        }
+
+        button {
+            background-color: #e74c3c;
+            color: white;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #c0392b;
+        }
+
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .cell {
+            width: 55px;
+            height: 55px;
+            border: 2px solid #455a64;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        /* Durum Renkleri */
+        .cell.correct {
+            background-color: var(--correct-color);
+            border-color: var(--correct-color);
+        }
+
+        .cell.present {
+            background-color: var(--present-color);
+            border-color: var(--present-color);
+        }
+
+        .cell.absent {
+            background-color: var(--absent-color);
+            border-color: var(--absent-color);
+        }
+
+        .message {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 15px;
+            min-height: 30px;
+            text-align: center;
+        }
+
+        .hidden-input {
+            position: absolute;
+            opacity: 0;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Lingo</h1>
+    <div class="subtitle">sozluk.gov.tr Referanslı Kelime Oyunu</div>
+
+    <div class="setup-container">
+        <label for="word-length">Kelime Uzunluğu:</label>
+        <select id="word-length">
+            <option value="4">4 Harfli</option>
+            <option value="5" selected>5 Harfli</option>
+            <option value="6">6 Harfli</option>
+            <option value="7">7 Harfli</option>
+        </select>
+        <button onclick="initGame()">Yeni Oyun Başlat</button>
+    </div>
+
+    <!-- Mobil odaklanma kolaylığı için gizli girdi alanı -->
+    <input type="text" id="keyboard-buffer" class="hidden-input" autocomplete="off" autofocus>
+
+    <div class="game-board" id="board" onclick="focusInput()"></div>
+
+    <div class="message" id="message-display"></div>
+
+    <script>
+        // TDK Sözlük yapısına uygun yerel kelime havuzu (Örnek havuz uzatılabilir)
+        const wordPool = {
+            4: ["ANIT", "ACAR", "BATI", "DOĞU", "KALE", "YURT", "SENA", "KURT", "OBAK", "YAZI", "KATI", "SİLİ", "İLKE", "ÜLKE"],
+            5: ["KALEM", "KAVUN", "SÖZLÜK", "YAZAR", "MİRAS", "KİTAP", "DENİZ", "DÜNYA", "GÜNEŞ", "BAHAR", "KUMAL", "EFKÂR", "TUTKU", "ZAMAN"],
+            6: ["BELLEK", "KÜLTÜR", "TÜRKÇE", "MİLLET", "GAYRET", "HAZİNE", "SANATÇI", "YAZILM", "SİSTEM", "ADALET", "TENEKE", "VİCDAN"],
+            7: ["SÖZCÜKL", "SÖZLÜKÇ", "KAPANIŞ", "MİMARLİ", "KILAVUZ", "ANADOLU", "AKADEMİ", "BELGELİ", "YETENEK", "FELSEFE", "BAŞARIL"]
+        };
+
+        // Türkçe harf dönüşüm haritası (Büyük harf ve I/İ karmaşasını önlemek için)
+        const trMap = { 'ç': 'Ç', 'ğ': 'Ğ', 'ı': 'I', 'i': 'İ', 'ö': 'Ö', 'ş': 'Ş', 'ü': 'Ü' };
+
+        let secretWord = "";
+        let wordLength = 5;
+        const maxAttempts = 5;
+        let currentAttempt = 0;
+        let currentGuess = "";
+        let gameOver = false;
+
+        const board = document.getElementById("board");
+        const messageDisplay = document.getElementById("message-display");
+        const inputBuffer = document.getElementById("keyboard-buffer");
+
+        function cleanTurkishText(text) {
+            return text.toUpperCase().replace(/[çğıiöşü]/g, m => trMap[m]);
+        }
+
+        function initGame() {
+            wordLength = parseInt(document.getElementById("word-length").value);
+            const pool = wordPool[wordLength];
+            secretWord = cleanTurkishText(pool[Math.floor(Math.random() * pool.length)]);
+            
+            currentAttempt = 0;
+            currentGuess = "";
+            gameOver = false;
+            messageDisplay.innerText = "";
+            
+            buildBoard();
+            focusInput();
+        }
+
+        function buildBoard() {
+            board.innerHTML = "";
+            for (let i = 0; i < maxAttempts; i++) {
+                const row = document.createElement("div");
+                row.className = "row";
+                for (let j = 0; j < wordLength; j++) {
+                    const cell = document.createElement("div");
+                    cell.className = "cell";
+                    cell.id = `cell-${i}-${j}`;
+                    
+                    // Lingo Kuralı: İlk satırın ilk harfi ipucu olarak verilir
+                    if (i === 0 && j === 0) {
+                        cell.innerText = secretWord[0];
+                    }
+                    
+                    row.appendChild(cell);
+                }
+                board.appendChild(row);
+            }
+        }
+
+        function focusInput() {
+            if (!gameOver) inputBuffer.focus();
+        }
+
+        // Klavye dinleyicisi
+        window.addEventListener("keydown", (e) => {
+            if (gameOver) return;
+
+            if (e.key === "Enter") {
+                if (currentGuess.length === wordLength) {
+                    checkGuess();
+                } else {
+                    showMessage("Yetersiz harf sayısı!", "#e74c3c");
+                }
+            } else if (e.key === "Backspace") {
+                currentGuess = currentGuess.slice(0, -1);
+                updateRowDisplay();
+            } else if (currentGuess.length < wordLength) {
+                // Sadece harf girişlerini kabul et (Türkçe karakter korumalı)
+                const char = e.key.toLowerCase();
+                if (char.length === 1 && (/[a-zçğıiöşü]/.test(char))) {
+                    currentGuess += cleanTurkishText(char);
+                    updateRowDisplay();
+                }
+            }
+        });
+
+        function updateRowDisplay() {
+            for (let j = 0; j < wordLength; j++) {
+                const cell = document.getElementById(`cell-${currentAttempt}-${j}`);
+                
+                // İlk denemede ilk harf ipucunu silmeme kontrolü
+                if (currentAttempt === 0 && j === 0 && currentGuess.length === 0) {
+                    cell.innerText = secretWord[0];
+                } else {
+                    cell.innerText = currentGuess[j] || "";
+                }
+            }
+        }
+
+        function checkGuess() {
+            const secretLetterCount = {};
+            // Harf frekanslarını hesapla (Sarı renk lojistiği için)
+            for (let char of secretWord) {
+                secretLetterCount[char] = (secretLetterCount[char] || 0) + 1;
+            }
+
+            const rowStatus = new Array(wordLength).fill("absent");
+
+            // 1. Aşama: Tam eşleşmeleri (Yeşil) kontrol et
+            for (let i = 0; i < wordLength; i++) {
+                if (currentGuess[i] === secretWord[i]) {
+                    rowStatus[i] = "correct";
+                    secretLetterCount[currentGuess[i]]--;
+                }
+            }
+
+            // 2. Aşama: Var olan ama yeri yanlış harfleri (Sarı) kontrol et
+            for (let i = 0; i < wordLength; i++) {
+                if (rowStatus[i] !== "correct") {
+                    if (secretLetterCount[currentGuess[i]] > 0) {
+                        rowStatus[i] = "present";
+                        secretLetterCount[currentGuess[i]]--;
+                    }
+                }
+            }
+
+            // Arayüzü güncelle ve renk sınıflarını ata
+            for (let i = 0; i < wordLength; i++) {
+                const cell = document.getElementById(`cell-${currentAttempt}-${i}`);
+                cell.classList.add(rowStatus[i]);
+            }
+
+            // Oyun bitti mi kontrolü
+            if (currentGuess === secretWord) {
+                showMessage("Tebrikler! Kelimeyi bildiniz. 🎉", varName("--correct-color"));
+                gameOver = true;
+            } else {
+                currentAttempt++;
+                currentGuess = "";
+                
+                if (currentAttempt >= maxAttempts) {
+                    showMessage(`Maalesef hakkınız bitti! Kelime: ${secretWord}`, "#e74c3c");
+                    gameOver = true;
+                } else {
+                    // Sonraki satırın başına Lingo kuralı gereği ilk harf ipucunu koy
+                    const nextFirstCell = document.getElementById(`cell-${currentAttempt}-0`);
+                    nextFirstCell.innerText = secretWord[0];
+                }
+            }
+        }
+
+        function showMessage(msg, color) {
+            messageDisplay.innerText = msg;
+            messageDisplay.style.color = color;
+        }
+
+        function varName(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        // Sayfa ilk açıldığında oyunu başlat
+        window.onload = initGame;
+    </script>
+</body>
+</html>
