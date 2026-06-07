@@ -78,6 +78,7 @@
             flex-direction: column;
             gap: 8px;
             margin-bottom: 25px;
+            cursor: pointer;
         }
 
         .row {
@@ -97,21 +98,22 @@
             font-weight: bold;
             text-transform: uppercase;
             transition: all 0.2s ease;
+            background-color: transparent;
         }
 
         .cell.correct {
-            background-color: var(--correct-color);
-            border-color: var(--correct-color);
+            background-color: var(--correct-color) !important;
+            border-color: var(--correct-color) !important;
         }
 
         .cell.present {
-            background-color: var(--present-color);
-            border-color: var(--present-color);
+            background-color: var(--present-color) !important;
+            border-color: var(--present-color) !important;
         }
 
         .cell.absent {
-            background-color: var(--absent-color);
-            border-color: var(--absent-color);
+            background-color: var(--absent-color) !important;
+            border-color: var(--absent-color) !important;
         }
 
         .message {
@@ -120,6 +122,16 @@
             margin-top: 15px;
             min-height: 30px;
             text-align: center;
+        }
+
+        /* Klavye odağını kaybetmemek için görünmez input */
+        #hidden-input {
+            position: absolute;
+            opacity: 0;
+            top: -100px;
+            left: -100px;
+            width: 1px;
+            height: 1px;
         }
     </style>
 </head>
@@ -139,171 +151,12 @@
         <button onclick="initGame()">Yeni Oyun Başlat</button>
     </div>
 
-    <div class="game-board" id="board"></div>
+    <input type="text" id="hidden-input" autocomplete="off" autofocus>
+
+    <div class="game-board" id="board" onclick="focusInput()"></div>
     <div class="message" id="message-display"></div>
 
     <script>
-        // Kesin olarak harf sayılarına göre ayrılmış ve genişletilmiş TDK havuzu
         const wordPool = {
-            4: ["ANIT", "ACAR", "BATI", "DOĞU", "KALE", "YURT", "SENA", "KURT", "YAZI", "KATI", "SİLİ", "İLKE", "ÜLKE", "ALÇI", "ARAZ", "ADIM", "ANFI", "AŞÇI", "AFİŞ", "AŞIK", "BAKİ", "BLOK", "CİLA", "ÇAPA", "DERE", "EKİN", "FELÇ", "GIDA", "FELÇ", "İDOL", "İMGE", "İVME", "KREM", "LİSE", "MART", "OCAK", "ÖYKÜ", "RANT", "SARI", "TAHT", "UZAY", "VALE", "VETO"],
-            5: ["KALEM", "KAVUN", "YAZAR", "MİRAS", "KİTAP", "DENİZ", "DÜNYA", "GÜNEŞ", "BAHAR", "KUMAL", "EFKÂR", "TUTKU", "ZAMAN", "CEVİZ", "DAİRE", "EMLAK", "FESİH", "LİMAN", "KRAVAT", "MANTİ", "NİMET", "OTİZM", "RADYO", "SEHPA", "TAVŞA", "LİMAN", "SİREN", "EKSEN", "İSKAN", "İRONİ", "İNCİR", "İZMİR", "İPTAL", "İSRAF", "ŞAHİS", "MESAİ", "SİVRİ", "BİBER", "KİLİM", "MİKRO"],
-            6: ["BELLEK", "KÜLTÜR", "TÜRKÇE", "MİLLET", "GAYRET", "HAZİNE", "SANATÇI", "YAZILM", "SİSTEM", "ADALET", "TENEKE", "VİCDAN", "SÖZLÜK", "GÖZLÜK", "KIVRAM", "REHBER", "MİMARİ", "SİGORT", "TAYYAR", "TİYATR", "BEYAZT", "KAFTER", "İSTİFA", "İHANET", "İLETKİ", "İSTİH", "MİTRAL", "BİRİNC", "DİREKT", "İŞLEMC"],
-            7: ["SÖZCÜKL", "SÖZLÜKÇ", "KAPANIŞ", "MİMARLİ", "KILAVUZ", "ANADOLU", "AKADEMİ", "BELGELİ", "YETENEK", "FELSEFE", "BAŞARIL", "İSTİSNA", "İKTİSAT", "İLETİŞİ", "MİLLİYET", "ZANAATÇ", "ÇELİŞKİ", "BELGESE", "DİNAMİK", "İSTİKBA", "BİLMEC", "DİPLOMA", "ÖZGÜRLÜ"]
-        };
-
-        let secretWord = "";
-        let wordLength = 5;
-        const maxAttempts = 5;
-        let currentAttempt = 0;
-        let currentGuess = "";
-        let gameOver = false;
-
-        const board = document.getElementById("board");
-        const messageDisplay = document.getElementById("message-display");
-
-        // Saf Türkçe Karakter Büyütme Fonksiyonu (İ - I karmaşasına kesin çözüm)
-        function turkceBuyut(text) {
-            let herfMap = { 'i': 'İ', 'ş': 'Ş', 'ğ': 'Ğ', 'ç': 'Ç', 'ı': 'I', 'ö': 'Ö', 'ü': 'Ü' };
-            return text.split('').map(char => {
-                return herfMap[char] || char.toUpperCase();
-            }).join('');
-        }
-
-        function initGame() {
-            wordLength = parseInt(document.getElementById("word-length").value);
-            const pool = wordPool[wordLength];
-            
-            // Aynı kelimenin üst üste gelmesini engellemek için rastgele seçim
-            secretWord = pool[Math.floor(Math.random() * pool.length)];
-            
-            currentAttempt = 0;
-            currentGuess = "";
-            gameOver = false;
-            messageDisplay.innerText = "";
-            
-            buildBoard();
-        }
-
-        function buildBoard() {
-            board.innerHTML = "";
-            for (let i = 0; i < maxAttempts; i++) {
-                const row = document.createElement("div");
-                row.className = "row";
-                for (let j = 0; j < wordLength; j++) {
-                    const cell = document.createElement("div");
-                    cell.className = "cell";
-                    cell.id = `cell-${i}-${j}`;
-                    
-                    // Geleneksel Lingo Kuralı: Satırların ilk hücresine ilk harf ipucunu yerleştir
-                    if (j === 0) {
-                        cell.innerText = secretWord[0];
-                        cell.style.color = "#7f8c8d"; // İpucu rengi
-                    }
-                    
-                    row.appendChild(cell);
-                }
-                board.appendChild(row);
-            }
-        }
-
-        // Klavye Girdilerini Dinleme ve Yönetme
-        window.addEventListener("keydown", (e) => {
-            if (gameOver) return;
-
-            // Tarayıcının 'Key' değerini doğrudan alıp Türkçe dönüşümünü yapıyoruz
-            let keyChar = e.key;
-
-            if (e.key === "Enter") {
-                if (currentGuess.length === wordLength) {
-                    checkGuess();
-                } else {
-                    showMessage(`Lütfen ${wordLength} harfli bir kelime girin!`, "#e74c3c");
-                }
-            } else if (e.key === "Backspace") {
-                currentGuess = currentGuess.slice(0, -1);
-                updateRowDisplay();
-            } else if (currentGuess.length < wordLength) {
-                // Sadece harf tuşlamalarını yakala (Türkçe karakter duyarlı)
-                if (keyChar.length === 1 && /[a-zA-ZçğıiöşüÇĞIİÖŞÜ]/.test(keyChar)) {
-                    currentGuess += turkceBuyut(keyChar);
-                    updateRowDisplay();
-                }
-            }
-        });
-
-        function updateRowDisplay() {
-            for (let j = 0; j < wordLength; j++) {
-                const cell = document.getElementById(`cell-${currentAttempt}-${j}`);
-                
-                if (j < currentGuess.length) {
-                    cell.innerText = currentGuess[j];
-                    cell.style.color = "#ffffff"; // Oyuncunun yazdığı harf beyaz
-                } else if (j === 0) {
-                    cell.innerText = secretWord[0]; // Boşken ilk harf ipucunu koru
-                    cell.style.color = "#7f8c8d";
-                } else {
-                    cell.innerText = "";
-                }
-            }
-        }
-
-        function checkGuess() {
-            const secretLetterCount = {};
-            // Hedef kelimedeki harf sayılarını listele (Sarı renk doğrulaması için)
-            for (let char of secretWord) {
-                secretLetterCount[char] = (secretLetterCount[char] || 0) + 1;
-            }
-
-            const rowStatus = new Array(wordLength).fill("absent");
-
-            // 1. TUR: Tam doğru yerdeki (Yeşil) harfleri tespit et
-            for (let i = 0; i < wordLength; i++) {
-                if (currentGuess[i] === secretWord[i]) {
-                    rowStatus[i] = "correct";
-                    secretLetterCount[currentGuess[i]]--;
-                }
-            }
-
-            // 2. TUR: Kelimede olan ama yanlış yerdeki (Sarı) harfleri tespit et
-            for (let i = 0; i < wordLength; i++) {
-                if (rowStatus[i] !== "correct") {
-                    if (secretLetterCount[currentGuess[i]] > 0) {
-                        rowStatus[i] = "present";
-                        secretLetterCount[currentGuess[i]]--;
-                    }
-                }
-            }
-
-            // Hücreleri renklendir ve text rengini sabitle
-            for (let i = 0; i < wordLength; i++) {
-                const cell = document.getElementById(`cell-${currentAttempt}-${i}`);
-                cell.innerText = currentGuess[i];
-                cell.style.color = "#ffffff";
-                cell.classList.add(rowStatus[i]);
-            }
-
-            // Sonuç Kontrolü
-            if (currentGuess === secretWord) {
-                showMessage("Tebrikler! Kelimeyi doğru tahmin ettiniz. 🎉", "#2ecc71");
-                gameOver = true;
-            } else {
-                currentAttempt++;
-                currentGuess = "";
-                
-                if (currentAttempt >= maxAttempts) {
-                    showMessage(`Maalesef bilemediniz! Hedef Kelime: ${secretWord}`, "#e74c3c");
-                    gameOver = true;
-                }
-            }
-        }
-
-        function showMessage(msg, color) {
-            messageDisplay.innerText = msg;
-            messageDisplay.style.color = color;
-        }
-
-        // İlk açılışta tetikle
-        window.onload = initGame;
-    </script>
-</body>
-</html>
+            4: ["ANIT", "ACAR", "BATI", "DOĞU", "KALE", "YURT", "SENA", "KURT", "YAZI", "KATI", "SİLİ", "İLKE", "ÜLKE", "ALÇI", "ARAZ", "ADIM", "ANFI", "AŞÇI", "AFİŞ", "AŞIK", "BAKİ", "BLOK", "CİLA", "ÇAPA", "DERE", "EKİN", "GIDA", "İDOL", "İMGE", "İVME", "KREM", "LİSE", "MART", "OCAK", "ÖYKÜ", "RANT", "SARI", "TAHT", "UZAY", "VALE", "VETO"],
+            5: ["KALEM", "KAVUN", "YAZAR", "MİRAS", "KİTAP", "DENİZ", "DÜNYA", "GÜNEŞ", "BAHAR", "KUMAL", "EFKÂR", "TUTKU", "ZAMAN", "CEVİZ", "DAİRE", "EMLAK", "FESİH", "LİMAN", "KRAVAT", "MANTİ", "NİMET", "OTİZM", "RADYO", "SEHPA", "TAVŞA", "SİREN", "EKSEN", "İSKAN", "İRONİ", "İNCİR", "İZMİR", "İPTAL", "İSRAF", "ŞAHİS", "MESAİ", "SİVRİ", "BİBER", "KİLİM", "MİK
