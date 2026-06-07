@@ -18,40 +18,42 @@
             background-color: var(--bg-color);
             color: #ffffff;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            box-sizing: border-box;
         }
 
         h1 {
-            margin-bottom: 5px;
+            margin: 5px 0 0 0;
             color: #e74c3c;
             text-transform: uppercase;
             letter-spacing: 2px;
+            font-size: 2rem;
         }
 
         .subtitle {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #bdc3c7;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .setup-container {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             background: var(--card-bg);
-            padding: 15px 25px;
+            padding: 10px 20px;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             display: flex;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
         }
 
         select, button {
-            padding: 10px 15px;
-            font-size: 1rem;
+            padding: 8px 12px;
+            font-size: 0.95rem;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -76,24 +78,24 @@
         .game-board {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-bottom: 25px;
+            gap: 6px;
+            margin-bottom: 15px;
         }
 
         .row {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
 
         .cell {
-            width: 55px;
-            height: 55px;
+            width: 48px;
+            height: 48px;
             border: 2px solid #455a64;
             border-radius: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: bold;
             text-transform: uppercase;
             transition: all 0.2s ease;
@@ -116,11 +118,55 @@
         }
 
         .message {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
-            margin-top: 15px;
-            min-height: 30px;
+            margin-bottom: 15px;
+            min-height: 25px;
             text-align: center;
+        }
+
+        /* Mobil ve Masaüstü için Ekran Klavyesi */
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            max-width: 500px;
+            margin-top: auto;
+            padding-bottom: 10px;
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .key {
+            background-color: #455a64;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 14px 0;
+            flex: 1;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            text-align: center;
+            text-transform: uppercase;
+            touch-action: manipulation;
+        }
+
+        .key:active, .key:hover {
+            background-color: #546e7a;
+        }
+
+        .key.wide {
+            flex: 1.8;
+            font-size: 0.9rem;
+            background-color: #7f8c8d;
         }
     </style>
 </head>
@@ -130,24 +176,65 @@
     <div class="subtitle">sozluk.gov.tr Tabanlı Kelime Oyunu</div>
 
     <div class="setup-container">
-        <label for="word-length">Kelime Uzunluğu:</label>
         <select id="word-length">
-            <option value="4">4 Harfli</option>
-            <option value="5" selected>5 Harfli</option>
-            <option value="6">6 Harfli</option>
-            <option value="7">7 Harfli</option>
+            <option value="4">4 Harf</option>
+            <option value="5" selected>5 Harf</option>
+            <option value="6">6 Harf</option>
+            <option value="7">7 Harf</option>
         </select>
-        <button onclick="initGame()">Yeni Oyun Başlat</button>
+        <button onclick="initGame()">Yeni Oyun</button>
     </div>
 
     <div class="game-board" id="board"></div>
     <div class="message" id="message-display"></div>
 
+    <div class="keyboard">
+        <div class="keyboard-row">
+            <button class="key" onclick="handleInput('E')">E</button>
+            <button class="key" onclick="handleInput('R')">R</button>
+            <button class="key" onclick="handleInput('T')">T</button>
+            <button class="key" onclick="handleInput('Y')">Y</button>
+            <button class="key" onclick="handleInput('U')">U</button>
+            <button class="key" onclick="handleInput('I')">I</button>
+            <button class="key" onclick="handleInput('İ')">İ</button>
+            <button class="key" onclick="handleInput('O')">O</button>
+            <button class="key" onclick="handleInput('Ö')">Ö</button>
+            <button class="key" onclick="handleInput('P')">P</button>
+        </div>
+        <div class="keyboard-row">
+            <button class="key" onclick="handleInput('A')">A</button>
+            <button class="key" onclick="maxAttempts">S</button>
+            <button class="key" onclick="handleInput('S')">S</button>
+            <button class="key" onclick="handleInput('D')">D</button>
+            <button class="key" onclick="handleInput('F')">F</button>
+            <button class="key" onclick="handleInput('G')">G</button>
+            <button class="key" onclick="handleInput('Ğ')">Ğ</button>
+            <button class="key" onclick="handleInput('H')">H</button>
+            <button class="key" onclick="handleInput('J')">J</button>
+            <button class="key" onclick="handleInput('K')">K</button>
+            <button class="key" onclick="handleInput('L')">L</button>
+            <button class="key" onclick="handleInput('Ş')">Ş</button>
+        </div>
+        <div class="keyboard-row">
+            <button class="key wide" onclick="handleInput('ENTER')">ENTER</button>
+            <button class="key" onclick="handleInput('Z')">Z</button>
+            <button class="key" onclick="handleInput('X')">X</button>
+            <button class="key" onclick="handleInput('C')">C</button>
+            <button class="key" onclick="handleInput('Ç')">Ç</button>
+            <button class="key" onclick="handleInput('V')">V</button>
+            <button class="key" onclick="handleInput('B')">B</button>
+            <button class="key" onclick="handleInput('N')">N</button>
+            <button class="key" onclick="handleInput('M')">M</button>
+            <button class="key" onclick="handleInput('Ü')">Ü</button>
+            <button class="key wide" onclick="handleInput('BACKSPACE')">SİL</button>
+        </div>
+    </div>
+
     <script>
         const wordPool = {
-            4: ["ANIT", "ACAR", "BATI", "DOĞU", "KALE", "YURT", "SENA", "KURT", "YAZI", "KATI", "SİLİ", "İLKE", "ÜLKE", "ALÇI", "ARAZ", "ADIM", "ANFI", "AŞÇI", "AFİŞ", "AŞIK", "BAKİ", "BLOK", "CİLA", "ÇAPA", "DERE", "EKİN", "GIDA", "İDOL", "İMGE", "İVME", "KREM", "LİSE", "MART", "OCAK", "ÖYKÜ", "RANT", "SARI", "TAHT", "UZAY", "VALE", "VETO"],
-            5: ["KALEM", "KAVUN", "YAZAR", "MİRAS", "KİTAP", "DENİZ", "DÜNYA", "GÜNEŞ", "BAHAR", "KUMAL", "EFKÂR", "TUTKU", "ZAMAN", "CEVİZ", "DAİRE", "EMLAK", "FESİH", "LİMAN", "KRAVAT", "MANTİ", "NİMET", "OTİZM", "RADYO", "SEHPA", "TAVŞA", "SİREN", "EKSEN", "İSKAN", "İRONİ", "İNCİR", "İZMİR", "İPTAL", "İSRAF", "ŞAHİS", "MESAİ", "SİVRİ", "BİBER", "KİLİM", "MİKRO"],
-            6: ["BELLEK", "KÜLTÜR", "TÜRKÇE", "MİLLET", "GAYRET", "HAZİNE", "SANATÇI", "YAZILM", "SİSTEM", "ADALET", "TENEKE", "VİCDAN", "SÖZLÜK", "GÖZLÜK", "KIVRAM", "REHBER", "MİMARİ", "SİGORT", "TAYYAR", "TİYATR", "BEYAZT", "KAFTER", "İSTİFA", "İHANET", "İLETKİ", "İSTİH", "MİTRAL", "BİRİNC", "DİREKT", "İŞLEMC"],
+            4: ["ANIT", "ACAR", "BATI", "DOĞU", "KALE", "YURT", "KURT", "YAZI", "KATI", "İLKE", "ÜLKE", "ALÇI", "ADIM", "AŞÇI", "AFİŞ", "AŞIK", "BAKİ", "BLOK", "CİLA", "ÇAPA", "DERE", "EKİN", "GIDA", "İDOL", "İMGE", "İVME", "KREM", "LİSE", "MART", "OCAK", "ÖYKÜ", "RANT", "SARI", "TAHT", "UZAY", "VALE", "VETO"],
+            5: ["KALEM", "KAVUN", "YAZAR", "MİRAS", "KİTAP", "DENİZ", "DÜNYA", "GÜNEŞ", "BAHAR", "KUMAL", "EFKÂR", "TUTKU", "ZAMAN", "CEVİZ", "DAİRE", "EMLAK", "FESİH", "LİMAN", "KRAVAT", "MANTİ", "NİMET", "OTİZM", "RADYO", "SEHPA", "TAVŞA", "SİREN", "EKSEN", "İSKAN", "İRONİ", "İNCİR", "İZMİR", "İPTAL", "İSRAF", "MESAİ", "SİVRİ", "BİBER", "KİLİM", "MİKRO"],
+            6: ["BELLEK", "KÜLTÜR", "TÜRKÇE", "MİLLET", "GAYRET", "HAZİNE", "SANATÇI", "YAZILM", "SİSTEM", "ADALET", "TENEKE", "VİCDAN", "SÖZLÜK", "GÖZLÜK", "KIVRAM", "REHBER", "MİMARİ", "SİGORT", "TAYYAR", "TİYATR", "BEYAZT", "KAFTER", "İSTİFA", "İHANET", "İLETKİ", "MİTRAL", "BİRİNC", "DİREKT", "İŞLEMC"],
             7: ["SÖZCÜKL", "SÖZLÜKÇ", "KAPANIŞ", "MİMARLİ", "KILAVUZ", "ANADOLU", "AKADEMİ", "BELGELİ", "YETENEK", "FELSEFE", "BAŞARIL", "İSTİSNA", "İKTİSAT", "İLETİŞİ", "MİLLİYET", "ZANAATÇ", "ÇELİŞKİ", "BELGESE", "DİNAMİK", "İSTİKBA", "BİLMEC", "DİPLOMA", "ÖZGÜRLÜ"]
         };
 
@@ -169,7 +256,6 @@
         function initGame() {
             wordLength = parseInt(document.getElementById("word-length").value);
             const pool = wordPool[wordLength];
-            
             secretWord = pool[Math.floor(Math.random() * pool.length)];
             
             currentAttempt = 0;
@@ -190,37 +276,46 @@
                     cell.className = "cell";
                     cell.id = `cell-${i}-${j}`;
                     
-                    // Sadece ilk satırın ilk hücresinde oyun başında ipucu harfi görünür
+                    // Lingo: Sadece ilk satırın ilk hücresinde oyun başında ipucu harfi görünür
                     if (i === 0 && j === 0) {
                         cell.innerText = secretWord[0];
                         cell.style.color = "#7f8c8d";
                     }
-                    
                     row.appendChild(cell);
                 }
                 board.appendChild(row);
             }
         }
 
-        // Doğrudan window üzerinden güvenli klavye dinlemesi (Ekran kaydırması yapmaz)
-        window.addEventListener("keydown", (e) => {
+        // Ortak Giriş Yöneticisi (Hem ekrandaki hem fiziksel klavyeyi kontrol eder)
+        function handleInput(input) {
             if (gameOver) return;
 
-            if (e.key === "Enter") {
+            if (input === "ENTER") {
                 if (currentGuess.length === wordLength) {
                     checkGuess();
                 } else {
                     showMessage(`Lütfen ${wordLength} harfli bir kelime girin!`, "#e74c3c");
                 }
-            } else if (e.key === "Backspace") {
+            } else if (input === "BACKSPACE") {
                 currentGuess = currentGuess.slice(0, -1);
                 updateRowDisplay();
-            } else if (currentGuess.length < wordLength) {
-                // Caps Lock açık/kapalı fark etmeksizin tuşun adını kontrol et
+            } else if (currentGuess.length < wordLength && input.length === 1) {
+                currentGuess += input;
+                updateRowDisplay();
+            }
+        }
+
+        // Bilgisayardan oynayanlar için fiziksel klavye dinleyicisi
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                handleInput("ENTER");
+            } else if (e.key === "Backspace") {
+                handleInput("BACKSPACE");
+            } else {
                 let keyChar = e.key;
                 if (keyChar.length === 1 && /[a-zA-ZçğıiöşüÇĞIİÖŞÜ]/.test(keyChar)) {
-                    currentGuess += turkceBuyut(keyChar);
-                    updateRowDisplay();
+                    handleInput(turkceBuyut(keyChar));
                 }
             }
         });
@@ -233,7 +328,6 @@
                     cell.innerText = currentGuess[j];
                     cell.style.color = "#ffffff";
                 } else if (j === 0) {
-                    // Oyuncu yazdığı harfleri silerse ilk harf ipucunu geri getir
                     cell.innerText = secretWord[0];
                     cell.style.color = "#7f8c8d";
                 } else {
@@ -250,7 +344,7 @@
 
             const rowStatus = new Array(wordLength).fill("absent");
 
-            // 1. Aşama: Yeşiller (Doğru yerdeki harfler)
+            // Yeşiller
             for (let i = 0; i < wordLength; i++) {
                 if (currentGuess[i] === secretWord[i]) {
                     rowStatus[i] = "correct";
@@ -258,7 +352,7 @@
                 }
             }
 
-            // 2. Aşama: Sarılar (Yanlış yerdeki harfler)
+            // Sarılar
             for (let i = 0; i < wordLength; i++) {
                 if (rowStatus[i] !== "correct") {
                     if (secretLetterCount[currentGuess[i]] > 0) {
@@ -268,7 +362,7 @@
                 }
             }
 
-            // Renklendirme uygulaması
+            // Arayüze uygula
             for (let i = 0; i < wordLength; i++) {
                 const cell = document.getElementById(`cell-${currentAttempt}-${i}`);
                 cell.innerText = currentGuess[i];
@@ -276,19 +370,19 @@
                 cell.classList.add(rowStatus[i]);
             }
 
-            // Oyun Sonu / Tur Geçiş Kontrolü
+            // Oyun bitti mi?
             if (currentGuess === secretWord) {
-                showMessage("Tebrikler! Kelimeyi doğru tahmin ettiniz. 🎉", "#2ecc71");
+                showMessage("Tebrikler! Kelimeyi bildiniz. 🎉", "#2ecc71");
                 gameOver = true;
             } else {
                 currentAttempt++;
                 currentGuess = "";
                 
                 if (currentAttempt >= maxAttempts) {
-                    showMessage(`Maalesef bilemediniz! Doğru Kelime: ${secretWord}`, "#e74c3c");
+                    showMessage(`Bilemediniz! Doğru Kelime: ${secretWord}`, "#e74c3c");
                     gameOver = true;
                 } else {
-                    // Lingo Kuralı: Yeni satıra geçince YALNIZCA o satırın başına ilk harfi ipucu bas
+                    // Lingo Kuralı: Yeni satıra geçildiğinde sadece o satırın başına ilk harf gelir
                     const nextFirstCell = document.getElementById(`cell-${currentAttempt}-0`);
                     nextFirstCell.innerText = secretWord[0];
                     nextFirstCell.style.color = "#7f8c8d";
