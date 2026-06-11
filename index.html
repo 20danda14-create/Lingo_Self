@@ -86,11 +86,13 @@
             flex-direction: column;
             gap: 6px;
             margin-bottom: 15px;
+            min-height: 270px; /* Grid'in yüklenirken kaymasını engeller */
         }
 
         .row {
             display: flex;
             gap: 6px;
+            justify-content: center;
         }
 
         .cell {
@@ -187,7 +189,9 @@
         <button id="new-game-btn" onclick="startFullContest()" disabled>Yeni Yarışma</button>
     </div>
 
+    <!-- Kelimelerin yazılacağı grid burasıdır -->
     <div class="game-board" id="board"></div>
+    
     <div class="message" id="message-display"></div>
 
     <div class="keyboard">
@@ -235,7 +239,7 @@
         const wordPool = {
             4: ["ANIT", "ACAR", "BATI", "DOĞU", "KALE", "YURT", "KURT", "YAZI", "KATI", "İLKE", "ÜLKE", "ALÇI", "ADIM", "AŞÇI", "AFİŞ", "AŞIK", "BAKİ", "BLOK", "CİLA", "ÇAPA", "DERE", "EKİN", "GIDA", "İDOL", "İMGE", "İVME", "KREM", "LİSE", "MART", "OCAK", "ÖYKÜ", "RANT", "SARI", "TAHT", "UZAY", "VALE", "VETO"],
             5: ["KALEM", "KAVUN", "YAZAR", "MİRAS", "KİTAP", "DENİZ", "DÜNYA", "GÜNEŞ", "BAHAR", "EFKÂR", "TUTKU", "ZAMAN", "CEVİZ", "DAİRE", "EMLAK", "FESİH", "LİMAN", "MANTI", "NİMET", "OTİZM", "RADYO", "SEHPA", "SİREN", "EKSEN", "İSKAN", "İRONİ", "İNCİR", "İZMİR", "İPTAL", "İSRAF", "MESAİ", "SİVRİ", "BİBER", "KİLİM", "MİKRO"],
-            6: ["BELLEK", "KÜLTÜR", "TÜRKÇE", "MİLLET", "GAYRET", "HAZİNE", "SANATÇI", "YAZILM", "SİSTEM", "ADALET", "TENEKE", "VİCDAN", "SÖZLÜK", "GÖZLÜK", "REHBER", "MİMARİ", "TAYYAR", "İSTİFA", "İHANET", "İLETKİ", "MİTRAL", "DİREKT"],
+            6: ["BELLEK", "KÜLTÜR", "TÜRKÇE", "MİLLET", "GAYRET", "HAZİNE", "SANATÇI", "SİSTEM", "ADALET", "TENEKE", "VİCDAN", "SÖZLÜK", "GÖZLÜK", "REHBER", "MİMARİ", "TAYYAR", "İSTİFA", "İHANET", "İLETKİ", "MİTRAL", "DİREKT"],
             7: ["KAPANIŞ", "KILAVUZ", "ANADOLU", "AKADEMİ", "BELGELİ", "YETENEK", "FELSEFE", "BAŞARAN", "İSTİSNA", "İKTİSAT", "MİLLİYET", "ÇELİŞKİ", "DİNAMİK", "DİPLOMA"]
         };
 
@@ -251,10 +255,217 @@
         let gameOver = false;
         let waitingForNext = false; 
 
-        const board = document.getElementById("board");
-        const messageDisplay = document.getElementById("message-display");
-        const progressDisplay = document.getElementById("progress-display");
-        const scoreDisplay = document.getElementById("score-display");
-        const newGameBtn = document.getElementById("new-game-btn");
+        // DOM elementlerini global scope'ta tutuyoruz ama atamayı yükleme sonrasında yapacağız
+        let board, messageDisplay, progressDisplay, scoreDisplay, newGameBtn;
 
-        function turkceBuy
+        function turkceBuyut(text) {
+            let herfMap = { 'i': 'İ', 'ş': 'Ş', 'ğ': 'Ğ', 'ç': 'Ç', 'ı': 'I', 'ö': 'Ö', 'ü': 'Ü' };
+            return text.split('').map(char => herfMap[char] || char.toUpperCase()).join('');
+        }
+
+        function getRandomWordsFromPool(length, count) {
+            let shuffled = [...wordPool[length]].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function startFullContest() {
+            contestWords = [];
+            currentWordIndex = 0;
+            correctCount = 0;
+            gameOver = false;
+            waitingForNext = false;
+            if(newGameBtn) newGameBtn.disabled = true;
+
+            let words4 = getRandomWordsFromPool(4, 3);
+            let words5 = getRandomWordsFromPool(5, 3);
+            let words6 = getRandomWordsFromPool(6, 3);
+            let words7 = getRandomWordsFromPool(7, 1);
+
+            contestWords = [...words4, ...words5, ...words6, ...words7];
+
+            updateStatusDisplays();
+            loadCurrentWord();
+        }
+
+        function loadCurrentWord() {
+            secretWord = contestWords[currentWordIndex];
+            wordLength = secretWord.length;
+            currentAttempt = 0;
+            currentGuess = "";
+            waitingForNext = false;
+            if(messageDisplay) messageDisplay.innerText = "";
+            
+            updateStatusDisplays();
+            buildBoard();
+        }
+
+        function updateStatusDisplays() {
+            if(progressDisplay) progressDisplay.innerText = `Kelime: ${currentWordIndex + 1}/10`;
+            if(scoreDisplay) scoreDisplay.innerText = `Doğru: ${correctCount}`;
+        }
+
+        function buildBoard() {
+            if (!board) return;
+            board.innerHTML = "";
+            for (let i = 0; i < maxAttempts; i++) {
+                const row = document.createElement("div");
+                row.className = "row";
+                for (let j = 0; j < wordLength; j++) {
+                    const cell = document.createElement("div");
+                    cell.className = "cell";
+                    cell.id = `cell-${i}-${j}`;
+                    
+                    // Lingo Kuralı: İlk satırda ilk harf gri ipucu olarak görünür
+                    if (i === 0 && j === 0) {
+                        cell.innerText = secretWord[0];
+                        cell.style.color = "#7f8c8d";
+                    }
+                    row.appendChild(cell);
+                }
+                board.appendChild(row);
+            }
+        }
+
+        function handleInput(input) {
+            if (gameOver || waitingForNext) return;
+
+            if (input === "ENTER") {
+                if (currentGuess.length === wordLength) {
+                    checkGuess();
+                } else {
+                    showMessage(`Lütfen ${wordLength} harfli bir kelime girin!`, "#e74c3c");
+                }
+            } else if (input === "BACKSPACE") {
+                currentGuess = currentGuess.slice(0, -1);
+                updateRowDisplay();
+            } else if (currentGuess.length < wordLength && input.length === 1) {
+                currentGuess += input;
+                updateRowDisplay();
+            }
+        }
+
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                handleInput("ENTER");
+            } else if (e.key === "Backspace") {
+                handleInput("BACKSPACE");
+            } else {
+                let keyChar = e.key;
+                if (keyChar.length === 1 && /[a-zA-ZçğıiöşüÇĞIİÖŞÜ]/.test(keyChar)) {
+                    handleInput(turkceBuyut(keyChar));
+                }
+            }
+        });
+
+        function updateRowDisplay() {
+            for (let j = 0; j < wordLength; j++) {
+                const cell = document.getElementById(`cell-${currentAttempt}-${j}`);
+                if (!cell) continue;
+                
+                if (j < currentGuess.length) {
+                    cell.innerText = currentGuess[j];
+                    cell.style.color = "#ffffff";
+                } else if (j === 0) {
+                    cell.innerText = secretWord[0];
+                    cell.style.color = "#7f8c8d";
+                } else {
+                    cell.innerText = "";
+                }
+            }
+        }
+
+        function checkGuess() {
+            const secretLetterCount = {};
+            for (let char of secretWord) {
+                secretLetterCount[char] = (secretLetterCount[char] || 0) + 1;
+            }
+
+            const rowStatus = new Array(wordLength).fill("absent");
+
+            // Yeşiller
+            for (let i = 0; i < wordLength; i++) {
+                if (currentGuess[i] === secretWord[i]) {
+                    rowStatus[i] = "correct";
+                    secretLetterCount[currentGuess[i]]--;
+                }
+            }
+
+            // Sarılar
+            for (let i = 0; i < wordLength; i++) {
+                if (rowStatus[i] !== "correct") {
+                    if (secretLetterCount[currentGuess[i]] > 0) {
+                        rowStatus[i] = "present";
+                        secretLetterCount[currentGuess[i]]--;
+                    }
+                }
+            }
+
+            // Arayüz renklendirmesi
+            for (let i = 0; i < wordLength; i++) {
+                const cell = document.getElementById(`cell-${currentAttempt}-${i}`);
+                if (!cell) continue;
+                cell.innerText = currentGuess[i];
+                cell.style.color = "#ffffff";
+                cell.classList.add(rowStatus[i]);
+            }
+
+            if (currentGuess === secretWord) {
+                correctCount++;
+                updateStatusDisplays();
+                showMessage("Tebrikler! Kelimeyi bildiniz. 🎉", "#2ecc71");
+                moveToNextStep();
+            } else {
+                currentAttempt++;
+                currentGuess = "";
+                
+                if (currentAttempt >= maxAttempts) {
+                    showMessage(`Bilemediniz! Doğru Kelime: ${secretWord} 😢`, "#e74c3c");
+                    moveToNextStep();
+                } else {
+                    const nextFirstCell = document.getElementById(`cell-${currentAttempt}-0`);
+                    if (nextFirstCell) {
+                        nextFirstCell.innerText = secretWord[0];
+                        nextFirstCell.style.color = "#7f8c8d";
+                    }
+                }
+            }
+        }
+
+        function moveToNextStep() {
+            waitingForNext = true;
+            currentWordIndex++;
+
+            setTimeout(() => {
+                if (currentWordIndex < 10) {
+                    loadCurrentWord();
+                } else {
+                    gameOver = true;
+                    waitingForNext = false;
+                    if(progressDisplay) progressDisplay.innerText = "Yarışma Bitti!";
+                    showMessage(`Yarışma tamamlandı! 10 kelimenin ${correctCount} tanesini bildiniz! 🏆`, "#3498db");
+                    if(newGameBtn) newGameBtn.disabled = false; 
+                }
+            }, 2500); 
+        }
+
+        function showMessage(msg, color) {
+            if(messageDisplay) {
+                messageDisplay.innerText = msg;
+                messageDisplay.style.color = color;
+            }
+        }
+
+        // KESİN ÇÖZÜM: Sayfadaki tüm HTML nesneleri (grid dahil) hazır olduğunda oyunu kur ve başlat
+        document.addEventListener("DOMContentLoaded", () => {
+            board = document.getElementById("board");
+            messageDisplay = document.getElementById("message-display");
+            progressDisplay = document.getElementById("progress-display");
+            scoreDisplay = document.getElementById("score-display");
+            newGameBtn = document.getElementById("new-game-btn");
+            
+            // Yarışmayı tetikle
+            startFullContest();
+        });
+    </script>
+</body>
+</html>
