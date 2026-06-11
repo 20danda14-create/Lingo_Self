@@ -239,5 +239,22 @@
             7: ["KAPANIŞ", "KILAVUZ", "ANADOLU", "AKADEMİ", "BELGELİ", "YETENEK", "FELSEFE", "BAŞARAN", "İSTİSNA", "İKTİSAT", "MİLLİYET", "ÇELİŞKİ", "DİNAMİK", "DİPLOMA"]
         };
 
-        // Yarışma şeması: 3 tane 4'lü, 3 tane 5'li, 3 tane 6'lı, 1 tane 7'li harf (Toplam 10)
-        const contestSchema
+        let contestWords = []; 
+        let currentWordIndex = 0; 
+        let correctCount = 0; 
+
+        let secretWord = "";
+        let wordLength = 5;
+        const maxAttempts = 5;
+        let currentAttempt = 0;
+        let currentGuess = "";
+        let gameOver = false;
+        let waitingForNext = false; 
+
+        const board = document.getElementById("board");
+        const messageDisplay = document.getElementById("message-display");
+        const progressDisplay = document.getElementById("progress-display");
+        const scoreDisplay = document.getElementById("score-display");
+        const newGameBtn = document.getElementById("new-game-btn");
+
+        function turkceBuy
